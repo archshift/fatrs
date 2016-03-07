@@ -25,7 +25,7 @@ pub type LONG = i32;
 #[cfg(feature = "unicode")]
 pub type TCHAR = WORD;
 #[cfg(not(feature = "unicode"))]
-pub type TCHAR = BYTE;
+pub type TCHAR = i8;
 
 pub enum FILINFO {}
 pub enum DIR {}
@@ -214,10 +214,10 @@ pub extern fn get_fattime() -> DWORD {
 
 #[cfg(not(feature = "unicode"))]
 pub unsafe fn make_tchar_string(string: &CString) -> Option<*const TCHAR> {
-    if slice::from_raw_parts(string.into_raw(), string.len()).iter().find(|&&x| x > 127).is_some() {
+    if slice::from_raw_parts(string.into_raw() as *const u8, string.len()).iter().find(|&&x| x > 127).is_some() {
         // Non-ascii: found a byte over 127
         return None;
     }
 
-    Some(string.into_raw())
+    Some(string.into_raw() as *const TCHAR)
 }

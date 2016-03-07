@@ -15,7 +15,11 @@ impl<'a> Filesystem<'a> {
 	pub fn mount(path: CString<'a>, opt: u8) -> Result<Filesystem, foreign::FRESULT> {
 		let mut fatfs: foreign::FATFS = unsafe { mem::zeroed() };
 		let res = unsafe {
-			foreign::f_mount(&mut fatfs, foreign::make_tchar_string(&path).unwrap(), opt)
+			let string = match foreign::make_tchar_string(&path) {
+				Some(s) => s,
+				None => return Err(foreign::FRESULT::FR_INVALID_NAME)
+			};
+			foreign::f_mount(&mut fatfs, string, opt)
 		};
 		match res {
 			foreign::FRESULT::FR_OK => {
@@ -32,7 +36,11 @@ impl<'a> Filesystem<'a> {
 impl<'a> Drop for Filesystem<'a> {
 	fn drop(&mut self) {
 		unsafe {
-			foreign::f_mount(ptr::null_mut(), foreign::make_tchar_string(&self.path).unwrap(), 0)
+			let string = match foreign::make_tchar_string(&self.path) {
+				Some(s) => s,
+				None => return
+			};
+			foreign::f_mount(ptr::null_mut(), string, 0)
 		};
 	}
 }

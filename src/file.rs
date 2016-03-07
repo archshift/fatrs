@@ -12,7 +12,11 @@ impl File {
 	pub fn open(&self, path: &CString, mode: u8) -> Result<File, foreign::FRESULT> {
 		let mut fil: foreign::FIL = unsafe { mem::zeroed() };
 		let res = unsafe {
-			foreign::f_open(&mut fil, foreign::make_tchar_string(path).unwrap(), mode)
+			let string = match foreign::make_tchar_string(path) {
+				Some(s) => s,
+				None => return Err(foreign::FRESULT::FR_INVALID_NAME)
+			};
+			foreign::f_open(&mut fil, string, mode)
 		};
 		match res {
 			foreign::FRESULT::FR_OK => {
