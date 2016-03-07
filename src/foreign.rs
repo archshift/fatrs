@@ -1,19 +1,31 @@
-use libc;
-
 use core::slice;
 
 use rcstring::CString;
 
-pub type BYTE = libc::c_uchar;
-pub type UINT = libc::c_uint;
-pub type WORD = libc::c_ushort;
-pub type DWORD = libc::c_ulong;
+pub type voidp = *const u8;
+pub type voidp_mut = *mut u8;
+
+#[cfg(feature = "int16")]
+pub type INT = i16;
+#[cfg(feature = "int16")]
+pub type UINT = u16;
+
+#[cfg(not(feature = "int16"))]
+pub type INT = i32;
+#[cfg(not(feature = "int16"))]
+pub type UINT = u32;
+
+pub type BYTE = u8;
+pub type WORD = u16;
+pub type DWORD = u32;
+
+pub type SHORT = i16;
+pub type LONG = i32;
 
 #[cfg(feature = "unicode")]
-pub type TCHAR = libc::c_ushort;
-
+pub type TCHAR = WORD;
 #[cfg(not(feature = "unicode"))]
-pub type TCHAR = libc::c_char;
+pub type TCHAR = BYTE;
 
 pub enum FILINFO {}
 pub enum DIR {}
@@ -104,8 +116,8 @@ pub struct FIL {
 extern {
     pub fn f_open(fp: *mut FIL, path: *const TCHAR, mode: BYTE) -> FRESULT;
     pub fn f_close(fp: *mut FIL) -> FRESULT;
-    pub fn f_read(fp: *mut FIL, buff: *mut libc::c_void, btr: UINT, br: *mut UINT) -> FRESULT;
-    pub fn f_write(fp: *mut FIL, buff: *const libc::c_void, btw: UINT, bw: *mut UINT) -> FRESULT;
+    pub fn f_read(fp: *mut FIL, buff: voidp_mut, btr: UINT, br: *mut UINT) -> FRESULT;
+    pub fn f_write(fp: *mut FIL, buff: voidp, btw: UINT, bw: *mut UINT) -> FRESULT;
     pub fn f_forward(fp: *mut FIL, func: extern fn(*const BYTE, UINT) -> UINT, btf: UINT, bf: UINT) -> FRESULT;
     pub fn f_lseek(fp: *mut FIL, ofs: DWORD) -> FRESULT;
     pub fn f_truncate(fp: *mut FIL) -> FRESULT;
@@ -146,7 +158,7 @@ pub const STA_NODISK: DSTATUS = 0x02;
 pub const STA_PROTECT: DSTATUS = 0x04;
 
 pub static mut disk_initialize_func: Option<fn(BYTE) -> DSTATUS> = None;
-pub static mut disk_ioctl_func: Option<fn(BYTE, BYTE, *mut libc::c_void) -> DRESULT> = None;
+pub static mut disk_ioctl_func: Option<fn(BYTE, BYTE, voidp_mut) -> DRESULT> = None;
 pub static mut disk_read_func: Option<fn(BYTE, *mut BYTE, DWORD, UINT) -> DRESULT> = None;
 pub static mut disk_write_func: Option<fn(BYTE, *const BYTE, DWORD, UINT) -> DRESULT> = None;
 pub static mut disk_status_func: Option<fn(BYTE) -> DSTATUS> = None;
@@ -161,7 +173,7 @@ pub extern fn disk_initialize(pdrv: BYTE) -> DSTATUS {
 }
 
 #[no_mangle]
-pub extern fn disk_ioctl(pdrv: BYTE, cmd: BYTE, buff: *mut libc::c_void) -> DRESULT {
+pub extern fn disk_ioctl(pdrv: BYTE, cmd: BYTE, buff: voidp_mut) -> DRESULT {
     if let Some(f) = unsafe { disk_ioctl_func } {
         return f(pdrv, cmd, buff);
     }

@@ -5,7 +5,6 @@ authors = ["archshift <gh@archshift.com>"]
 build = "build.rs"
 
 [dependencies]
-libc = "0.2.7"
 rcstring = "0.2.1"
 
 [build-dependencies]

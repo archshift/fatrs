@@ -2,7 +2,6 @@ use foreign;
 
 use core::mem;
 
-use libc::c_void;
 use rcstring::CString;
 
 pub struct File {
@@ -31,7 +30,7 @@ impl File {
 
 	pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_read: foreign::UINT = 0;
-		let res = unsafe { foreign::f_read(self.ffi_fp(), buf.as_mut_ptr() as *mut c_void, buf.len() as foreign::UINT, &mut bytes_read) };
+		let res = unsafe { foreign::f_read(self.ffi_fp(), buf.as_mut_ptr() as foreign::voidp_mut, buf.len() as foreign::UINT, &mut bytes_read) };
 		match res {
 			foreign::FRESULT::FR_OK => Ok(bytes_read as usize),
 			_ => Err(res)
@@ -40,7 +39,7 @@ impl File {
 
 	pub fn write(&mut self, buf: &[u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_written: foreign::UINT = 0;
-		let res = unsafe { foreign::f_write(self.ffi_fp(), buf.as_ptr() as *const c_void, buf.len() as foreign::UINT, &mut bytes_written) };
+		let res = unsafe { foreign::f_write(self.ffi_fp(), buf.as_ptr() as foreign::voidp, buf.len() as foreign::UINT, &mut bytes_written) };
 		match res {
 			foreign::FRESULT::FR_OK => Ok(bytes_written as usize),
 			_ => Err(res)
