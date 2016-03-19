@@ -157,61 +157,6 @@ pub const STA_NOINIT: DSTATUS = 0x01;
 pub const STA_NODISK: DSTATUS = 0x02;
 pub const STA_PROTECT: DSTATUS = 0x04;
 
-pub static mut disk_initialize_func: Option<fn(BYTE) -> DSTATUS> = None;
-pub static mut disk_ioctl_func: Option<fn(BYTE, BYTE, voidp_mut) -> DRESULT> = None;
-pub static mut disk_read_func: Option<fn(BYTE, *mut BYTE, DWORD, UINT) -> DRESULT> = None;
-pub static mut disk_write_func: Option<fn(BYTE, *const BYTE, DWORD, UINT) -> DRESULT> = None;
-pub static mut disk_status_func: Option<fn(BYTE) -> DSTATUS> = None;
-pub static mut get_fattime_func: Option<fn() -> DWORD> = None;
-
-#[no_mangle]
-pub extern fn disk_initialize(pdrv: BYTE) -> DSTATUS {
-    if let Some(f) = unsafe { disk_initialize_func } {
-        return f(pdrv);
-    }
-    STA_NOINIT
-}
-
-#[no_mangle]
-pub extern fn disk_ioctl(pdrv: BYTE, cmd: BYTE, buff: voidp_mut) -> DRESULT {
-    if let Some(f) = unsafe { disk_ioctl_func } {
-        return f(pdrv, cmd, buff);
-    }
-    DRESULT::RES_NOTRDY
-}
-
-#[no_mangle]
-pub extern fn disk_read(pdrv: BYTE, buff: *mut BYTE, sector: DWORD, count: UINT) -> DRESULT {
-    if let Some(f) = unsafe { disk_read_func } {
-        return f(pdrv, buff, sector, count);
-    }
-    DRESULT::RES_NOTRDY
-}
-
-#[no_mangle]
-pub extern fn disk_write(pdrv: BYTE, buff: *const BYTE, sector: DWORD, count: UINT) -> DRESULT {
-    if let Some(f) = unsafe { disk_write_func } {
-        return f(pdrv, buff, sector, count);
-    }
-    DRESULT::RES_NOTRDY
-}
-
-#[no_mangle]
-pub extern fn disk_status(pdrv: BYTE) -> DSTATUS {
-    if let Some(f) = unsafe { disk_status_func } {
-        return f(pdrv);
-    }
-    STA_NOINIT
-}
-
-#[no_mangle]
-pub extern fn get_fattime() -> DWORD {
-    if let Some(f) = unsafe { get_fattime_func } {
-        return f();
-    }
-    0
-}
-
 #[cfg(not(feature = "unicode"))]
 pub unsafe fn make_tchar_string(string: &CString) -> Option<*const TCHAR> {
     if slice::from_raw_parts(string.into_raw() as *const u8, string.len()).iter().find(|&&x| x > 127).is_some() {
