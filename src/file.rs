@@ -9,7 +9,7 @@ pub struct File {
 }
 
 impl File {
-	pub fn open(&self, path: &CString, mode: u8) -> Result<File, foreign::FRESULT> {
+	pub fn open(path: &CString, mode: u8) -> Result<File, foreign::FRESULT> {
 		let mut fil: foreign::FIL = unsafe { mem::zeroed() };
 		let res = unsafe {
 			let string = match foreign::make_tchar_string(path) {
