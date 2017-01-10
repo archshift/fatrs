@@ -31,6 +31,7 @@ pub enum FILINFO {}
 pub enum DIR {}
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum FRESULT {
     FR_OK = 0,
     FR_DISK_ERR,
@@ -159,10 +160,56 @@ pub const STA_PROTECT: DSTATUS = 0x04;
 
 #[cfg(not(feature = "unicode"))]
 pub unsafe fn make_tchar_string(string: &CString) -> Option<*const TCHAR> {
-    if slice::from_raw_parts(string.into_raw() as *const u8, string.len()).iter().find(|&&x| x > 127).is_some() {
+    let bytes = slice::from_raw_parts(string.into_raw() as *const u8, string.len());
+    if bytes.iter().find(|&&x| x > 127).is_some() {
         // Non-ascii: found a byte over 127
         return None;
     }
 
     Some(string.into_raw() as *const TCHAR)
+}
+
+
+#[cfg(test)]
+mod test {
+    use core::mem::size_of;
+
+    #[test]
+    fn test_type_sizes() {
+        use super::{ BYTE, SHORT, WORD, TCHAR, INT, UINT, LONG, DWORD };
+
+        extern {
+            static fatfs_test_sizeof_BYTE: usize;
+            static fatfs_test_sizeof_SHORT: usize;
+            static fatfs_test_sizeof_WORD: usize;
+            static fatfs_test_sizeof_TCHAR: usize;
+            static fatfs_test_sizeof_INT: usize;
+            static fatfs_test_sizeof_UINT: usize;
+            static fatfs_test_sizeof_LONG: usize;
+            static fatfs_test_sizeof_DWORD: usize;
+        }
+
+        assert_eq!(size_of::<BYTE>(), fatfs_test_sizeof_BYTE);
+        assert_eq!(size_of::<SHORT>(), fatfs_test_sizeof_SHORT);
+        assert_eq!(size_of::<WORD>(), fatfs_test_sizeof_WORD);
+        assert_eq!(size_of::<TCHAR>(), fatfs_test_sizeof_TCHAR);
+        assert_eq!(size_of::<INT>(), fatfs_test_sizeof_INT);
+        assert_eq!(size_of::<UINT>(), fatfs_test_sizeof_UINT);
+        assert_eq!(size_of::<LONG>(), fatfs_test_sizeof_LONG);
+        assert_eq!(size_of::<DWORD>(), fatfs_test_sizeof_DWORD);
+    }
+
+    #[test]
+    fn test_struct_sizes() {
+        use core::mem;
+        use super::{ FATFS, FIL };
+
+        extern {
+            static fatfs_test_sizeof_FATFS: usize;
+            static fatfs_test_sizeof_FIL: usize;
+        }
+
+        assert_eq!(size_of::<FATFS>(), fatfs_test_sizeof_FATFS);
+        assert_eq!(size_of::<FIL>(), fatfs_test_sizeof_FIL);
+    }
 }

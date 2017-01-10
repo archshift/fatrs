@@ -3,7 +3,9 @@ extern crate gcc;
 fn main() {
     let mut cfg = gcc::Config::new();
     let mut cfg = cfg.file("fatfs/ff.c")
+        .file("src/test-hooks.c")
         .include("fatfs")
+        .flag("-nodefaultlibs")
         .flag("-fno-strict-aliasing");
 
     let mut cfg = if cfg!(feature = "unicode") {

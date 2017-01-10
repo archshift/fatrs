@@ -24,7 +24,7 @@ impl File {
 					fil: fil
 				})
 			},
-			_ => Err(res),
+			e @ _ => Err(e),
 		}
 	}
 
@@ -34,27 +34,24 @@ impl File {
 
 	pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_read: foreign::UINT = 0;
-		let res = unsafe { foreign::f_read(self.ffi_fp(), buf.as_mut_ptr() as foreign::voidp_mut, buf.len() as foreign::UINT, &mut bytes_read) };
-		match res {
+		match unsafe { foreign::f_read(self.ffi_fp(), buf.as_mut_ptr() as foreign::voidp_mut, buf.len() as foreign::UINT, &mut bytes_read) } {
 			foreign::FRESULT::FR_OK => Ok(bytes_read as usize),
-			_ => Err(res)
+			e @ _ => Err(e)
 		}
 	}
 
 	pub fn write(&mut self, buf: &[u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_written: foreign::UINT = 0;
-		let res = unsafe { foreign::f_write(self.ffi_fp(), buf.as_ptr() as foreign::voidp, buf.len() as foreign::UINT, &mut bytes_written) };
-		match res {
+		match unsafe { foreign::f_write(self.ffi_fp(), buf.as_ptr() as foreign::voidp, buf.len() as foreign::UINT, &mut bytes_written) } {
 			foreign::FRESULT::FR_OK => Ok(bytes_written as usize),
-			_ => Err(res)
+			e @ _ => Err(e)
 		}
 	}
 
 	pub fn lseek(&mut self, offset: u32) -> Result<(), foreign::FRESULT> {
-		let res = unsafe { foreign::f_lseek(self.ffi_fp(), offset as foreign::DWORD) };
-		match res {
+		match unsafe { foreign::f_lseek(self.ffi_fp(), offset as foreign::DWORD) } {
 			foreign::FRESULT::FR_OK => Ok(()),
-			_ => Err(res)
+			e @ _ => Err(e)
 		}
 	}
 
@@ -63,18 +60,16 @@ impl File {
 	}
 
 	pub fn truncate(&mut self) -> Result<(), foreign::FRESULT> {
-		let res = unsafe { foreign::f_truncate(self.ffi_fp()) };
-		match res {
+		match unsafe { foreign::f_truncate(self.ffi_fp()) } {
 			foreign::FRESULT::FR_OK => Ok(()),
-			_ => Err(res)
+			e @ _ => Err(e)
 		}
 	}
 
 	pub fn sync(&mut self) -> Result<(), foreign::FRESULT> {
-		let res = unsafe { foreign::f_sync(self.ffi_fp()) };
-		match res {
+		match unsafe { foreign::f_sync(self.ffi_fp()) } {
 			foreign::FRESULT::FR_OK => Ok(()),
-			_ => Err(res)
+			e @ _ => Err(e)
 		}
 	}
 
