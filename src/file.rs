@@ -1,33 +1,16 @@
 use foreign;
+use filesystem;
 
 use core::mem;
 
 use rcstring::CString;
 
-pub struct File {
-	fil: foreign::FIL,
+pub struct File<'a, 'b: 'a> {
+    pub(crate) fs: &'a mut filesystem::Filesystem<'b>, 
+	pub(crate) fil: foreign::FIL,
 }
 
-impl File {
-	pub fn open(path: &CString, mode: u8) -> Result<File, foreign::FRESULT> {
-		let mut fil: foreign::FIL = unsafe { mem::zeroed() };
-		let res = unsafe {
-			let string = match foreign::make_tchar_string(path) {
-				Some(s) => s,
-				None => return Err(foreign::FRESULT_FR_INVALID_NAME)
-			};
-			foreign::f_open(&mut fil, string, mode)
-		};
-		match res {
-			foreign::FRESULT_FR_OK => {
-				Ok(File {
-					fil: fil
-				})
-			},
-			e @ _ => Err(e),
-		}
-	}
-
+impl<'a, 'b> File<'a, 'b> {
 	fn ffi_fp(&mut self) -> *mut foreign::FIL {
 		&mut self.fil
 	}
@@ -78,7 +61,7 @@ impl File {
 	}
 }
 
-impl Drop for File {
+impl<'a, 'b> Drop for File<'a, 'b>{
 	fn drop(&mut self) {
 		unsafe { foreign::f_close(self.ffi_fp()); }
 	}

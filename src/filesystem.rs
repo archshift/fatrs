@@ -1,4 +1,5 @@
 use foreign;
+use file;
 
 use core::mem;
 use core::ptr;
@@ -28,6 +29,29 @@ impl<'a> Filesystem<'a> {
 				})
 			},
 			_ => Err(res)
+		}
+	}
+
+	pub fn open<'b>(&'b mut self, path: &CString, mode: u8)
+        -> Result<file::File<'b, 'a>, foreign::FRESULT>
+        where 'a: 'b {
+
+        let mut fil: foreign::FIL = unsafe { mem::zeroed() };
+		let res = unsafe {
+			let string = match foreign::make_tchar_string(path) {
+				Some(s) => s,
+				None => return Err(foreign::FRESULT_FR_INVALID_NAME)
+			};
+			foreign::f_open(&mut fil, string, mode)
+		};
+		match res {
+			foreign::FRESULT_FR_OK => {
+				Ok(file::File {
+                    fs: self,
+					fil: fil
+				})
+			},
+			e @ _ => Err(e),
 		}
 	}
 }
