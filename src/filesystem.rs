@@ -1,4 +1,3 @@
-use file::File;
 use foreign;
 
 use core::mem;
@@ -17,12 +16,12 @@ impl<'a> Filesystem<'a> {
 		let res = unsafe {
 			let string = match foreign::make_tchar_string(&path) {
 				Some(s) => s,
-				None => return Err(foreign::FRESULT::FR_INVALID_NAME)
+				None => return Err(foreign::FRESULT_FR_INVALID_NAME)
 			};
 			foreign::f_mount(&mut fatfs, string, opt)
 		};
 		match res {
-			foreign::FRESULT::FR_OK => {
+			foreign::FRESULT_FR_OK => {
 				Ok(Filesystem {
 					fatfs: fatfs,
 					path: path,

@@ -14,12 +14,12 @@ impl File {
 		let res = unsafe {
 			let string = match foreign::make_tchar_string(path) {
 				Some(s) => s,
-				None => return Err(foreign::FRESULT::FR_INVALID_NAME)
+				None => return Err(foreign::FRESULT_FR_INVALID_NAME)
 			};
 			foreign::f_open(&mut fil, string, mode)
 		};
 		match res {
-			foreign::FRESULT::FR_OK => {
+			foreign::FRESULT_FR_OK => {
 				Ok(File {
 					fil: fil
 				})
@@ -35,7 +35,7 @@ impl File {
 	pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_read: foreign::UINT = 0;
 		match unsafe { foreign::f_read(self.ffi_fp(), buf.as_mut_ptr() as foreign::voidp_mut, buf.len() as foreign::UINT, &mut bytes_read) } {
-			foreign::FRESULT::FR_OK => Ok(bytes_read as usize),
+			foreign::FRESULT_FR_OK => Ok(bytes_read as usize),
 			e @ _ => Err(e)
 		}
 	}
@@ -43,14 +43,14 @@ impl File {
 	pub fn write(&mut self, buf: &[u8]) -> Result<usize, foreign::FRESULT> {
 		let mut bytes_written: foreign::UINT = 0;
 		match unsafe { foreign::f_write(self.ffi_fp(), buf.as_ptr() as foreign::voidp, buf.len() as foreign::UINT, &mut bytes_written) } {
-			foreign::FRESULT::FR_OK => Ok(bytes_written as usize),
+			foreign::FRESULT_FR_OK => Ok(bytes_written as usize),
 			e @ _ => Err(e)
 		}
 	}
 
 	pub fn lseek(&mut self, offset: u32) -> Result<(), foreign::FRESULT> {
 		match unsafe { foreign::f_lseek(self.ffi_fp(), offset as foreign::DWORD) } {
-			foreign::FRESULT::FR_OK => Ok(()),
+			foreign::FRESULT_FR_OK => Ok(()),
 			e @ _ => Err(e)
 		}
 	}
@@ -61,14 +61,14 @@ impl File {
 
 	pub fn truncate(&mut self) -> Result<(), foreign::FRESULT> {
 		match unsafe { foreign::f_truncate(self.ffi_fp()) } {
-			foreign::FRESULT::FR_OK => Ok(()),
+			foreign::FRESULT_FR_OK => Ok(()),
 			e @ _ => Err(e)
 		}
 	}
 
 	pub fn sync(&mut self) -> Result<(), foreign::FRESULT> {
 		match unsafe { foreign::f_sync(self.ffi_fp()) } {
-			foreign::FRESULT::FR_OK => Ok(()),
+			foreign::FRESULT_FR_OK => Ok(()),
 			e @ _ => Err(e)
 		}
 	}

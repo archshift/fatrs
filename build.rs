@@ -1,19 +1,58 @@
-extern crate gcc;
+extern crate cc;
+extern crate bindgen;
+
+use std::env;
+use std::fs::File;
+use std::path::PathBuf;
+use std::collections::HashMap;
+use std::io::Write;
+
+fn out_path() -> PathBuf {
+    PathBuf::from(env::var("OUT_DIR").unwrap())
+}
+
+fn out_path_str() -> String {
+    out_path().to_str().unwrap().to_owned()
+}
+
+fn write_extradefs(map: &HashMap<String, Option<String>>) {
+    let mut file = File::create(out_path().join("extraopts.h")).unwrap();
+
+    for (k, v) in map.iter() {
+        if let &Some(ref v) = v {
+            writeln!(file, "#define {} {}", k, v).unwrap();
+        } else {
+            writeln!(file, "#define {}", k).unwrap();
+        }
+    }
+}
 
 fn main() {
-    let mut cfg = gcc::Config::new();
-    let mut cfg = cfg.file("fatfs/ff.c")
-        .file("src/test-hooks.c")
-        .include("fatfs")
-        .flag("-nodefaultlibs")
-        .flag("-fno-strict-aliasing");
+    let mut extra_defs = HashMap::<String, Option<String>>::new();
 
-    let mut cfg = if cfg!(feature = "unicode") {
-        cfg.define("_LFN_UNICODE", Some("1"))
-            .file("fatfs/option/unicode.c")
+    if cfg!(feature = "unicode") {
+        extra_defs.insert("_LFN_UNICODE".into(), Some("1".into()));
     } else {
-        cfg.define("_LFN_UNICODE", Some("0"))
+        extra_defs.insert("_LFN_UNICODE".into(), Some("0".into()));
     };
 
-    cfg.compile("libfatfs.a");
+    write_extradefs(&extra_defs);
+
+    let bindings = bindgen::builder()
+        .clang_arg(format!("-I{}", out_path_str()))
+        .header("fatfs/ff.h")
+        .use_core()
+        .ctypes_prefix("::ctypes")
+        .generate().unwrap();
+
+    bindings.write_to_file(out_path().join("fatfs_bindings.rs")).unwrap();
+
+    cc::Build::new()
+        .file("fatfs/ff.c")
+        .include("fatfs")
+        .include(out_path())
+
+        .flag("-nodefaultlibs")
+        .flag("-fno-strict-aliasing")
+        .compile("libfatfs.a");
 }
