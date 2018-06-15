@@ -41,6 +41,7 @@ fn main() {
     let bindings = bindgen::builder()
         .clang_arg(format!("-I{}", out_path_str()))
         .header("fatfs/ff.h")
+        .header("fatfs/diskio.h")
         .use_core()
         .ctypes_prefix("::ctypes")
         .generate().unwrap();

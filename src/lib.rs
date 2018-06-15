@@ -1,8 +1,10 @@
 #![no_std]
 
-extern crate rcstring;
+#[macro_use] extern crate lazy_static;
+#[macro_use] pub extern crate rcstring;
+extern crate spin;
 
-pub(crate) mod foreign {
+pub mod foreign {
     #![allow(non_upper_case_globals)]
     #![allow(non_camel_case_types)]
     #![allow(non_snake_case)]
@@ -13,14 +15,29 @@ pub(crate) mod foreign {
 
 
     #[cfg(not(feature = "unicode"))]
-    pub(crate) unsafe fn make_tchar_string(string: &::rcstring::CString) -> Option<*const TCHAR> {
-        let bytes = ::core::slice::from_raw_parts(string.into_raw() as *const u8, string.len());
-        if bytes.iter().find(|&&x| x > 127).is_some() {
-            // Non-ascii: found a byte over 127
-            return None;
-        }
+    pub(crate) fn make_tchar_string<'a>(string: &'a str) -> impl Iterator<Item = TCHAR> + 'a {
+        string.chars().filter(|c| c.is_ascii()).map(|c| c as u32 as TCHAR)
+    }
 
-        Some(string.into_raw() as *const TCHAR)
+    pub(crate) struct TcharContainer {
+        pub buf: [TCHAR; 4096]
+    }
+
+    impl TcharContainer {
+        pub(crate) fn ptr(&self) -> *const TCHAR {
+            (&self.buf).as_ptr()
+        }
+    }
+
+    pub(crate) fn to_tchar_string<'a>(string: &str) -> TcharContainer {
+        let mut ret = TcharContainer {
+            buf: [0; 4096]
+        };
+        assert!(string.len() < ret.buf.len());
+        for (i, c) in make_tchar_string(string).enumerate() {
+            ret.buf[i] = c;
+        }
+        ret
     }
 
     include!(concat!(env!("OUT_DIR"), "/fatfs_bindings.rs"));
@@ -28,9 +45,13 @@ pub(crate) mod foreign {
 
 pub(crate) mod ctypes;
 
+mod device;
 mod file;
 mod filesystem;
 
+pub use device::*;
 pub use file::*;
 pub use filesystem::*;
+pub use rcstring as ffstr;
 
+pub const SECTOR_SIZE: usize = foreign::_MIN_SS as usize;
