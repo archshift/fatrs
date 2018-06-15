@@ -1,12 +1,8 @@
 use foreign;
 use filesystem;
 
-use core::mem;
-
-use rcstring::CString;
-
 pub struct File<'a, 'b: 'a> {
-    pub(crate) fs: &'a mut filesystem::Filesystem<'b>, 
+    pub(crate) _fs: &'a mut filesystem::Filesystem<'b>, 
 	pub(crate) fil: foreign::FIL,
 }
 

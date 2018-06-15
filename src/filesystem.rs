@@ -4,14 +4,10 @@ use file;
 use core::mem;
 use core::ptr;
 
-use rcstring::CString;
-
 pub struct Filesystem<'a> {
-	ctx: &'a mut ::FsCtx,
+	_ctx: &'a mut ::FsCtx,
 	path: foreign::TcharContainer,
 }
-
-static mut WORK_BUFFER: [u8; 2048] = [0u8; 2048];
 
 impl<'a> Filesystem<'a> {
 	pub fn mount(ctx: &'a mut ::FsCtx, path: &str, opt: u8)
@@ -22,7 +18,7 @@ impl<'a> Filesystem<'a> {
 		match res {
 			foreign::FRESULT_FR_OK => {
 				Ok(Filesystem {
-					ctx: ctx,
+					_ctx: ctx,
 					path: path,
 				})
 			},
@@ -46,7 +42,7 @@ impl<'a> Filesystem<'a> {
 		match res {
 			foreign::FRESULT_FR_OK => {
 				Ok(file::File {
-                    fs: self,
+                    _fs: self,
 					fil: fil
 				})
 			},

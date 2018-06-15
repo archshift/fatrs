@@ -101,7 +101,7 @@ pub extern fn disk_initialize(vol: ::foreign::BYTE) -> ::foreign::DSTATUS {
 
 #[no_mangle]
 pub extern fn disk_status(vol: ::foreign::BYTE) -> ::foreign::DSTATUS {
-    0
+    unimplemented!("Disk status for vol {} not yet implemented!", vol);
 }
 
 #[no_mangle]

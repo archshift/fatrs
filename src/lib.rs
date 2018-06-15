@@ -1,7 +1,6 @@
 #![no_std]
 
 #[macro_use] extern crate lazy_static;
-#[macro_use] pub extern crate rcstring;
 extern crate spin;
 
 pub mod foreign {
@@ -52,6 +51,5 @@ mod filesystem;
 pub use device::*;
 pub use file::*;
 pub use filesystem::*;
-pub use rcstring as ffstr;
 
 pub const SECTOR_SIZE: usize = foreign::_MIN_SS as usize;

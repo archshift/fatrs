@@ -6,7 +6,6 @@ build = "build.rs"
 
 [dependencies]
 lazy_static = "1.0"
-rcstring = "0.2"
 spin = { version = "0.4", default-features = false }
 
 [build-dependencies]
